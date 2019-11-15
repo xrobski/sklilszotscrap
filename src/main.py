@@ -3,37 +3,34 @@ import requests
 from bs4 import BeautifulSoup
 
 
-class Jobs:
-    def __init__(self):
-        # Hardcode link for scrapping an offers
-        self.actual_page = "http://www.skillshot.pl/jobs?page=6"
-        self.connection = requests.get(self.actual_page)
-        self.src = self.connection.content
-        self.soup = BeautifulSoup(self.src, 'lxml')
-
+class Scrapper:
+    def __init__(self, link):
         self.links = []
-        self.page_counter = len(self.soup.find_all("a", class_="page-link"))
+        self.page_to_scrap = link
 
-        # Scrapping page for job links
-    def scrapping_page(self):
+    def connect_with_page(self):
+        self.result = requests.get(self.page_to_scrap)
+        self.soruce = self.result.content
+        self.soup = BeautifulSoup(self.soruce, 'lxml')
+
+    def colecting_links(self):
         for link in self.soup.find_all(href=re.compile(r"/jobs/\d+")):
             self.links.append(('{}{}'.format('www.skillshot.pl', link.get('href'))))
 
-        # Change actual page
     def next_page(self):
         if self.soup.find_all("a", class_="page-link", rel="next"):
-            self.actual_page ="http://www.skillshot.pl"+ self.soup.find_all("a", class_="page-link", rel="next")[0].get('href')
-            print(self.actual_page)
+            self.page_to_scrap ="http://www.skillshot.pl"+ self.soup.find_all("a", class_="page-link", rel="next")[0].get('href')
+        else:
+            self.page_to_scrap = False
 
-        # for page in self.soup.find_all("a", class_="page-link", rel="next"):
-        #     self.pages.add(page.get('href'))
-        # print(self.pages)
+    def run_process_of_scrapping(self):
+        while self.page_to_scrap:
+            self.connect_with_page()
+            self.next_page()
 
-    # def process_of_scrapping(self):
-    #     for x in range():
-    #         self.scrapp_a_website_for_links
-    #         self.change_page
 
-test = Jobs()
-print(test.next_page())
+
+test = Scrapper("http://www.skillshot.pl/")
+# print(test.connect_with_page())
+print(test.run_process_of_scrapping())
 # print(test.scrapp_a_website_for_links())
