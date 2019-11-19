@@ -1,3 +1,4 @@
+import sqlite3
 import re
 import requests
 from bs4 import BeautifulSoup
@@ -13,7 +14,7 @@ class Scrapper:
         self.soruce = self.result.content
         self.soup = BeautifulSoup(self.soruce, 'lxml')
 
-    def colecting_links(self):
+    def colect_links(self):
         for link in self.soup.find_all(href=re.compile(r"/jobs/\d+")):
             self.links.append(('{}{}'.format('http://www.skillshot.pl', link.get('href'))))
 
@@ -23,36 +24,30 @@ class Scrapper:
         else:
             self.page_to_scrap = False
 
-    def run_process_of_scrapping(self):
+    def run_process_of_scrap(self):
         while self.page_to_scrap:
             self.connect_with_page()
-            self.colecting_links()
+            self.colect_links()
             self.next_page()
 
     def offers_excractor(self):
         for link in self.links:
             self.page_to_scrap = link
             self.connect_with_page()
-            # self.category = self.soup.find_all(class_=re.compile("badge badge-default badge-job-category"))
-            # self.id = pass
-            # self.name = pass
 
+            self.direct_link = link
+            self.u_id = re.findall(r"[0-9]+", link)[0]
             self.category = self.soup.find(class_=re.compile("badge badge-default badge-job-category")).string
-            self.views = self.soup.find_all("strong")[1].string
-            self.pub_date = self.soup.find_all("strong")[0].string
-            # print(self.category)
-            # print(self.views)
-            # print(self.pub_date)
+            self.name = self.soup.find("h1").string
+            self.views = re.search(r"\d+\s\w+", self.soup.text).group()
+            self.pub_date = re.search(r"\d+-\d+-\d+", self.soup.text).group()
 
-            x = re.findall("+\d", link)
-            print(x)
-            
+            scrap_localization = self.soup.find_all("p", style="font-size: 115%; margin-bottom: 0.7rem;")[0].text
+            self.localization = scrap_localization[scrap_localization.find(' w ')+3:]
+
             exit()
 
 
-
 test = Scrapper("https://www.skillshot.pl/jobs?page=5")
-# print(test.connect_with_page())
-print(test.run_process_of_scrapping())
+test.run_process_of_scrap()
 test.offers_excractor()
-# print(test.scrapp_a_website_for_links())
